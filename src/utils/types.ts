@@ -1,5 +1,10 @@
-// shows an object in the world
+import type Vector from "./vector";
+
 export interface WorldObject {
+  position: Vector;
   draw(ctx: CanvasRenderingContext2D): void;
-  decideMovement(deltaTime: number): void;
+}
+
+export interface FlockingObject extends WorldObject {
+  decideMovement(deltaTime: number, neighbors: WorldObject[]): void;
 }

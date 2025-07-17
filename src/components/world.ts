@@ -1,6 +1,6 @@
-import QuadTree from "./utils/quadtree";
-import type { WorldObject } from "./utils/types";
-import type DebugControls from "./utils/debug-controls";
+import QuadTree from "../utils/quadtree";
+import type DebugControls from "../utils/debug-controls";
+import { MobileEntity, type WorldEntity } from "./world-entities";
 
 class World {
   ctx: CanvasRenderingContext2D | null = null;
@@ -8,7 +8,7 @@ class World {
   quadTreeUnderConstruction: QuadTree | null = null;
   private debugControls: DebugControls | null = null;
 
-  constructor(debugControls?: DebugControls) {
+  constructor({ debugControls }: { debugControls?: DebugControls } = {}) {
     this.debugControls = debugControls || null;
     this.debugControls?.setupDebugControls();
 
@@ -25,21 +25,23 @@ class World {
     this.quadTreeUnderConstruction = new QuadTree({
       x: 0,
       y: 0,
-      width: window.innerWidth,
-      height: window.innerHeight,
+      width: canvas.width,
+      height: canvas.height,
       maxObjects: 5,
     });
   }
 
-  render(object: WorldObject) {
+  render(entity: WorldEntity) {
     if (this.ctx) {
-      object.draw(this.ctx);
-      this.quadTreeUnderConstruction?.insert(object);
+      entity.draw(this.ctx);
+      if (entity instanceof MobileEntity) {
+        this.quadTreeUnderConstruction?.insert(entity);
+      }
     }
   }
 
-  getNeighbors(object: WorldObject) {
-    return this.currentQuadTree?.queryRegion(object)?.objects || [];
+  getNeighbors(entity: WorldEntity) {
+    return this.currentQuadTree?.queryRegion(entity)?.objects || [];
   }
 
   beginSimulationLoop(renderFn: (deltaTime: number) => void) {
@@ -50,6 +52,8 @@ class World {
 
       const isPaused = this.debugControls?.getPaused() || false;
 
+      // have to run the reqAnimFrame else play logic cannot be handled
+      // because after playing who would run the simulation
       if (isPaused) {
         startTime = timestamp;
         requestAnimationFrame(simulation.bind(this));
@@ -60,16 +64,19 @@ class World {
       const deltaTime = Math.min((timestamp - startTime) / 1000, 0.3);
       startTime = timestamp;
 
+      const canvasWidth = this.ctx?.canvas.width!;
+      const canvasHeight = this.ctx?.canvas.height!;
+
       this.currentQuadTree = this.quadTreeUnderConstruction;
       this.quadTreeUnderConstruction = new QuadTree({
         x: 0,
         y: 0,
-        width: window.innerWidth,
-        height: window.innerHeight,
+        width: canvasWidth,
+        height: canvasHeight,
         maxObjects: 5,
       });
 
-      this.ctx?.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      this.ctx?.clearRect(0, 0, canvasWidth, canvasHeight);
 
       renderFn(deltaTime);
 
@@ -84,4 +91,4 @@ class World {
   }
 }
 
-export default World;
+export { World };

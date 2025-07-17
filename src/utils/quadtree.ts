@@ -1,11 +1,11 @@
-import type { WorldObject } from "./types";
+import type { WorldEntity } from "../components/world-entities";
 
 class Region {
   x: number;
   y: number;
   width: number;
   height: number;
-  objects: WorldObject[] = [];
+  objects: WorldEntity[] = [];
 
   constructor({
     x,
@@ -18,7 +18,7 @@ class Region {
     y: number;
     width: number;
     height: number;
-    objects?: WorldObject[];
+    objects?: WorldEntity[];
   }) {
     this.x = x;
     this.y = y;
@@ -29,7 +29,7 @@ class Region {
     }
   }
 
-  checkBoundaryAndInsert(object: WorldObject) {
+  checkBoundaryAndInsert(object: WorldEntity) {
     const isInsideTheRegion =
       object.position.x >= this.x &&
       object.position.x < this.x + this.width &&
@@ -66,7 +66,7 @@ class QuadTree {
     width: number;
     height: number;
     maxObjects: number;
-    objects?: WorldObject[];
+    objects?: WorldEntity[];
   }) {
     this.maxObjects = maxObjects;
     this.currentRegion = new Region({ x, y, width, height });
@@ -127,7 +127,7 @@ class QuadTree {
     this.isDivided = true;
   }
 
-  insert(object: WorldObject) {
+  insert(object: WorldEntity) {
     if (!this.isDivided) {
       if (this.currentRegion.objects.length < this.maxObjects) {
         this.currentRegion.checkBoundaryAndInsert(object);
@@ -143,7 +143,7 @@ class QuadTree {
     }
   }
 
-  queryRegion(object: WorldObject) {
+  queryRegion(object: WorldEntity) {
     if (this.checkIsDivided()) {
       this.topLeft.queryRegion(object);
       this.topRight.queryRegion(object);
